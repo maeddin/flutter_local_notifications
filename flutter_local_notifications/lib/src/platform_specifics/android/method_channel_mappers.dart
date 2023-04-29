@@ -6,6 +6,7 @@ import 'notification_channel_group.dart';
 import 'notification_details.dart';
 import 'notification_sound.dart';
 import 'person.dart';
+import 'styles/big_icon_style_information.dart';
 import 'styles/big_picture_style_information.dart';
 import 'styles/big_text_style_information.dart';
 import 'styles/default_style_information.dart';
@@ -227,7 +228,13 @@ extension AndroidNotificationDetailsMapper on AndroidNotificationDetails {
         ..addAll(_convertLargeIconToMap());
 
   Map<String, Object?> _convertStyleInformationToMap() {
-    if (styleInformation is BigPictureStyleInformation) {
+    if (styleInformation is BigIconStyleInformation) {
+      return <String, Object?>{
+        'style': AndroidNotificationStyle.bigIcon.index,
+        'styleInformation':
+            (styleInformation as BigIconStyleInformation?)?.toMap(),
+      };
+    } else if (styleInformation is BigPictureStyleInformation) {
       return <String, Object?>{
         'style': AndroidNotificationStyle.bigPicture.index,
         'styleInformation':
