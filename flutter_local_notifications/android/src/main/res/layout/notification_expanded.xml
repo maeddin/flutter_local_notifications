@@ -30,12 +30,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="big icon title"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"/>
 
         <TextView
             android:id="@+id/content_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="big icon body" />
+            android:text="big icon body"
+            android:textColor="@color/textPrimary"/>
     </LinearLayout>
 </LinearLayout>
