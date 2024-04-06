@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 // ignore: unnecessary_import
 import 'dart:typed_data';
 
@@ -624,6 +625,12 @@ class _HomePageState extends State<HomePage> {
                       buttonText: 'Show insistent notification',
                       onPressed: () async {
                         await _showInsistentNotification();
+                      },
+                    ),
+                    PaddedElevatedButton(
+                      buttonText: 'Show big icon notification',
+                      onPressed: () async {
+                        await _showBigIconNotification();
                       },
                     ),
                     PaddedElevatedButton(
@@ -1526,6 +1533,26 @@ class _HomePageState extends State<HomePage> {
     final File file = File(filePath);
     await file.writeAsBytes(response.bodyBytes);
     return filePath;
+  }
+
+  Future<void> _showBigIconNotification() async {
+    final String largeIconPath =
+        await _downloadAndSaveFile('https://dummyimage.com/48x48', 'largeIcon');
+    const BigIconStyleInformation bigPictureStyleInformation =
+        BigIconStyleInformation();
+    final AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+            'big icon channel id', 'big icon channel name',
+            channelDescription: 'big icon channel description',
+            importance: Importance.max,
+            priority: Priority.high,
+            ticker: 'ticker',
+            styleInformation: bigPictureStyleInformation,
+            largeIcon: FilePathAndroidBitmap(largeIconPath));
+    final NotificationDetails notificationDetails =
+        NotificationDetails(android: androidNotificationDetails);
+    await flutterLocalNotificationsPlugin.show(
+        id++, 'big icon title', 'big icon body', notificationDetails);
   }
 
   Future<void> _showBigPictureNotification() async {

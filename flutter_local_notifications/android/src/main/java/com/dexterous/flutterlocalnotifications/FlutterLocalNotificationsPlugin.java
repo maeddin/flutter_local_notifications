@@ -33,6 +33,7 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
@@ -280,6 +281,7 @@ public class FlutterLocalNotificationsPlugin
             .setSilent(BooleanUtils.getValue(notificationDetails.silent))
             .setOnlyAlertOnce(BooleanUtils.getValue(notificationDetails.onlyAlertOnce));
 
+    System.out.println("NOTIFICATION ACTIONS: " + notificationDetails.actions);
     if (notificationDetails.actions != null) {
       // Space out request codes by 16 so even with 16 actions they won't clash
       int requestCode = notificationDetails.id * 16;
@@ -977,6 +979,9 @@ public class FlutterLocalNotificationsPlugin
       NotificationDetails notificationDetails,
       NotificationCompat.Builder builder) {
     switch (notificationDetails.style) {
+      case BigIcon:
+        setBigIconStyle(context, notificationDetails, builder);
+        break;
       case BigPicture:
         setBigPictureStyle(context, notificationDetails, builder);
         break;
@@ -1005,6 +1010,37 @@ public class FlutterLocalNotificationsPlugin
           notificationDetails.progress,
           notificationDetails.indeterminate);
     }
+  }
+
+  private static void setBigIconStyle(
+          Context context,
+          NotificationDetails notificationDetails,
+          NotificationCompat.Builder builder) {
+    DefaultStyleInformation defaultStyleInformation = (DefaultStyleInformation) notificationDetails.styleInformation;
+    Bitmap bigIconBitmap = getBitmapFromSource(
+            context,
+            notificationDetails.largeIcon,
+            notificationDetails.largeIconBitmapSource);
+    CharSequence contentTitle = defaultStyleInformation.htmlFormatTitle
+                    ? fromHtml(notificationDetails.title)
+                    : notificationDetails.title;
+    CharSequence contentBody = defaultStyleInformation.htmlFormatBody
+            ? fromHtml(notificationDetails.body)
+            : notificationDetails.body;
+    RemoteViews notificationLayout = new RemoteViews(context.getPackageName(), R.layout.notification_normal);
+    notificationLayout.setImageViewBitmap(R.id.image_content, bigIconBitmap);
+    notificationLayout.setTextViewText(R.id.headline_text, contentTitle);
+    notificationLayout.setTextViewText(R.id.content_text, contentBody);
+
+    RemoteViews bigNotificationLayout = new RemoteViews(context.getPackageName(), R.layout.notification_expanded);
+    bigNotificationLayout.setImageViewBitmap(R.id.image_content, bigIconBitmap);
+    bigNotificationLayout.setTextViewText(R.id.headline_text, contentTitle);
+    bigNotificationLayout.setTextViewText(R.id.content_text, contentBody);
+    builder.setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+            .setCustomContentView(notificationLayout)
+            .setCustomHeadsUpContentView(notificationLayout)
+            .setCustomBigContentView(bigNotificationLayout)
+            .setLargeIcon(null);
   }
 
   private static void setBigPictureStyle(

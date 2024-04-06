@@ -401,6 +401,8 @@ public class NotificationDetails implements Serializable {
     DefaultStyleInformation defaultStyleInformation = getDefaultStyleInformation(styleInformation);
     if (notificationDetails.style == NotificationStyle.Default) {
       notificationDetails.styleInformation = defaultStyleInformation;
+    } else if (notificationDetails.style == NotificationStyle.BigIcon) {
+        notificationDetails.styleInformation = defaultStyleInformation;
     } else if (notificationDetails.style == NotificationStyle.BigPicture) {
       readBigPictureStyleInformation(
           notificationDetails, styleInformation, defaultStyleInformation);

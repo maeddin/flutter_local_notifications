@@ -33,6 +33,9 @@ enum AndroidNotificationStyle {
   /// The default style.
   defaultStyle,
 
+  /// The big icon style.
+  bigIcon,
+
   /// The big picture style.
   bigPicture,
 
