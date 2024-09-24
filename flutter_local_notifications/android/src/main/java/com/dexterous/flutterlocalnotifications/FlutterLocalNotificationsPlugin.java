@@ -1058,7 +1058,7 @@ public class FlutterLocalNotificationsPlugin
             .setCustomContentView(notificationLayout)
             .setCustomHeadsUpContentView(notificationLayout)
             .setCustomBigContentView(bigNotificationLayout)
-            .setLargeIcon(null);
+            .setLargeIcon((Bitmap) null);
   }
 
   private static void setBigPictureStyle(
