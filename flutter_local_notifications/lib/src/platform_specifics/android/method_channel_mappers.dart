@@ -46,6 +46,7 @@ extension AndroidNotificationChannelMapper on AndroidNotificationChannel {
         'groupId': groupId,
         'showBadge': showBadge,
         'importance': importance.value,
+        'bypassDnd': bypassDnd,
         'playSound': playSound,
         'enableVibration': enableVibration,
         'vibrationPattern': vibrationPattern,
@@ -181,6 +182,7 @@ extension AndroidNotificationDetailsMapper on AndroidNotificationDetails {
         'channelShowBadge': channelShowBadge,
         'channelAction': channelAction.index,
         'importance': importance.value,
+        'channelBypassDnd': channelBypassDnd,
         'priority': priority.value,
         'playSound': playSound,
         'enableVibration': enableVibration,
@@ -317,6 +319,8 @@ extension AndroidNotificationDetailsMapper on AndroidNotificationDetails {
                       _convertInputToMap(input))
                   .toList(),
               'cancelNotification': e.cancelNotification,
+              'semanticAction': e.semanticAction.value,
+              'invisible': e.invisible,
             },
           )
           .toList(),
