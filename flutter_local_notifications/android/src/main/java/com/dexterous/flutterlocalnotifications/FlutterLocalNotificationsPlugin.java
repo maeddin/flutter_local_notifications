@@ -382,7 +382,7 @@ public class FlutterLocalNotificationsPlugin
             actionBuilder.addRemoteInput(remoteInput.build());
           }
         }
-        if (action.invisible) {
+        if (BooleanUtils.getValue(action.invisible)) {
           builder.addInvisibleAction(actionBuilder.build());
         } else {
           builder.addAction(actionBuilder.build());
