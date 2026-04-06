@@ -26,6 +26,8 @@ import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
 import android.text.Html;
@@ -211,9 +213,12 @@ public class FlutterLocalNotificationsPlugin
   private static final String NOTIFICATION_RESPONSE_TYPE = "notificationResponseType";
   static String NOTIFICATION_DETAILS = "notificationDetails";
   static Gson gson;
+  private static final int GET_NOTIFICATION_APP_LAUNCH_DETAILS_TIMEOUT_MS = 3000;
   private MethodChannel channel;
   private Context applicationContext;
   private Activity mainActivity;
+  private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+  private final List<PendingLaunchDetailsResult> pendingLaunchDetailsResults = new ArrayList<>();
   static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1;
 
   static final int EXACT_ALARM_PERMISSION_REQUEST_CODE = 2;
@@ -224,6 +229,15 @@ public class FlutterLocalNotificationsPlugin
   private PermissionRequestListener callback;
 
   private PermissionRequestProgress permissionRequestProgress = PermissionRequestProgress.None;
+
+  private static final class PendingLaunchDetailsResult {
+    private final Result result;
+    private Runnable timeoutRunnable;
+
+    private PendingLaunchDetailsResult(Result result) {
+      this.result = result;
+    }
+  }
 
   static void rescheduleNotifications(Context context) {
     ArrayList<NotificationDetails> scheduledNotifications = loadScheduledNotifications(context);
@@ -1433,6 +1447,60 @@ public class FlutterLocalNotificationsPlugin
     this.mainActivity = flutterActivity;
   }
 
+  private Map<String, Object> buildNotificationAppLaunchDetails(@Nullable Intent intent) {
+    Map<String, Object> notificationAppLaunchDetails = new HashMap<>();
+    boolean notificationLaunchedApp =
+        intent != null
+            && (SELECT_NOTIFICATION.equals(intent.getAction())
+                || SELECT_FOREGROUND_NOTIFICATION_ACTION.equals(intent.getAction()))
+            && !launchedActivityFromHistory(intent);
+
+    if (notificationLaunchedApp) {
+      notificationAppLaunchDetails.put("notificationResponse", extractNotificationResponseMap(intent));
+    }
+
+    notificationAppLaunchDetails.put(NOTIFICATION_LAUNCHED_APP, notificationLaunchedApp);
+    return notificationAppLaunchDetails;
+  }
+
+  private void failPendingLaunchDetailsResults(String reason) {
+    if (pendingLaunchDetailsResults.isEmpty()) {
+      return;
+    }
+
+    Map<String, Object> notificationAppLaunchDetails = buildNotificationAppLaunchDetails(null);
+
+    for (PendingLaunchDetailsResult pendingResult : pendingLaunchDetailsResults) {
+      mainThreadHandler.removeCallbacks(pendingResult.timeoutRunnable);
+      pendingResult.result.success(notificationAppLaunchDetails);
+    }
+    pendingLaunchDetailsResults.clear();
+  }
+
+  private void onPendingLaunchDetailsTimeout(PendingLaunchDetailsResult pendingResult) {
+    if (!pendingLaunchDetailsResults.remove(pendingResult)) {
+      return;
+    }
+
+    Map<String, Object> notificationAppLaunchDetails = buildNotificationAppLaunchDetails(null);
+    pendingResult.result.success(notificationAppLaunchDetails);
+  }
+
+  private void flushPendingLaunchDetailsResults() {
+    if (mainActivity == null || pendingLaunchDetailsResults.isEmpty()) {
+      return;
+    }
+
+    Intent launchIntent = mainActivity.getIntent();
+    Map<String, Object> notificationAppLaunchDetails = buildNotificationAppLaunchDetails(launchIntent);
+
+    for (PendingLaunchDetailsResult pendingResult : pendingLaunchDetailsResults) {
+      mainThreadHandler.removeCallbacks(pendingResult.timeoutRunnable);
+      pendingResult.result.success(notificationAppLaunchDetails);
+    }
+    pendingLaunchDetailsResults.clear();
+  }
+
   @Override
   public void onAttachedToEngine(FlutterPluginBinding binding) {
     this.applicationContext = binding.getApplicationContext();
@@ -1442,6 +1510,7 @@ public class FlutterLocalNotificationsPlugin
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+    failPendingLaunchDetailsResults("engine_detached");
     this.channel.setMethodCallHandler(null);
     this.channel = null;
     this.applicationContext = null;
@@ -1455,6 +1524,7 @@ public class FlutterLocalNotificationsPlugin
 
     mainActivity = binding.getActivity();
     Intent mainActivityIntent = mainActivity.getIntent();
+    flushPendingLaunchDetailsResults();
     if (!launchedActivityFromHistory(mainActivityIntent)) {
       if (SELECT_FOREGROUND_NOTIFICATION_ACTION.equals(mainActivityIntent.getAction())) {
         Map<String, Object> notificationResponse =
@@ -1475,6 +1545,7 @@ public class FlutterLocalNotificationsPlugin
     binding.addRequestPermissionsResultListener(this);
     binding.addActivityResultListener(this);
     mainActivity = binding.getActivity();
+    flushPendingLaunchDetailsResults();
   }
 
   @Override
@@ -1716,22 +1787,24 @@ public class FlutterLocalNotificationsPlugin
   }
 
   private void getNotificationAppLaunchDetails(Result result) {
-    Map<String, Object> notificationAppLaunchDetails = new HashMap<>();
-    Boolean notificationLaunchedApp = false;
-    if (mainActivity != null) {
-      Intent launchIntent = mainActivity.getIntent();
-      notificationLaunchedApp =
-          launchIntent != null
-              && (SELECT_NOTIFICATION.equals(launchIntent.getAction())
-                  || SELECT_FOREGROUND_NOTIFICATION_ACTION.equals(launchIntent.getAction()))
-              && !launchedActivityFromHistory(launchIntent);
-      if (notificationLaunchedApp) {
-        notificationAppLaunchDetails.put(
-            "notificationResponse", extractNotificationResponseMap(launchIntent));
-      }
+    if (mainActivity == null) {
+      PendingLaunchDetailsResult pendingResult = new PendingLaunchDetailsResult(result);
+      pendingResult.timeoutRunnable =
+          new Runnable() {
+            @Override
+            public void run() {
+              onPendingLaunchDetailsTimeout(pendingResult);
+            }
+          };
+      pendingLaunchDetailsResults.add(pendingResult);
+      mainThreadHandler.postDelayed(
+          pendingResult.timeoutRunnable, GET_NOTIFICATION_APP_LAUNCH_DETAILS_TIMEOUT_MS);
+      return;
     }
 
-    notificationAppLaunchDetails.put(NOTIFICATION_LAUNCHED_APP, notificationLaunchedApp);
+    Intent launchIntent = mainActivity.getIntent();
+    Map<String, Object> notificationAppLaunchDetails =
+        buildNotificationAppLaunchDetails(launchIntent);
     result.success(notificationAppLaunchDetails);
   }
 
