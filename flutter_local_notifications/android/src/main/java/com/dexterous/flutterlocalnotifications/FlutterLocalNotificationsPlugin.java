@@ -1085,34 +1085,39 @@ public class FlutterLocalNotificationsPlugin
   }
 
   private static void setBigIconStyle(
-          Context context,
-          NotificationDetails notificationDetails,
-          NotificationCompat.Builder builder) {
-    DefaultStyleInformation defaultStyleInformation = (DefaultStyleInformation) notificationDetails.styleInformation;
-    Bitmap bigIconBitmap = getBitmapFromSource(
-            context,
-            notificationDetails.largeIcon,
-            notificationDetails.largeIconBitmapSource);
-    CharSequence contentTitle = defaultStyleInformation.htmlFormatTitle
-                    ? fromHtml(notificationDetails.title)
-                    : notificationDetails.title;
-    CharSequence contentBody = defaultStyleInformation.htmlFormatBody
+      Context context,
+      NotificationDetails notificationDetails,
+      NotificationCompat.Builder builder) {
+    DefaultStyleInformation defaultStyleInformation =
+        (DefaultStyleInformation) notificationDetails.styleInformation;
+    Bitmap bigIconBitmap =
+        getBitmapFromSource(
+            context, notificationDetails.largeIcon, notificationDetails.largeIconBitmapSource);
+    CharSequence contentTitle =
+        defaultStyleInformation.htmlFormatTitle
+            ? fromHtml(notificationDetails.title)
+            : notificationDetails.title;
+    CharSequence contentBody =
+        defaultStyleInformation.htmlFormatBody
             ? fromHtml(notificationDetails.body)
             : notificationDetails.body;
-    RemoteViews notificationLayout = new RemoteViews(context.getPackageName(), R.layout.notification_normal);
+    RemoteViews notificationLayout =
+        new RemoteViews(context.getPackageName(), R.layout.notification_normal);
     notificationLayout.setImageViewBitmap(R.id.image_content, bigIconBitmap);
     notificationLayout.setTextViewText(R.id.headline_text, contentTitle);
     notificationLayout.setTextViewText(R.id.content_text, contentBody);
 
-    RemoteViews bigNotificationLayout = new RemoteViews(context.getPackageName(), R.layout.notification_expanded);
+    RemoteViews bigNotificationLayout =
+        new RemoteViews(context.getPackageName(), R.layout.notification_expanded);
     bigNotificationLayout.setImageViewBitmap(R.id.image_content, bigIconBitmap);
     bigNotificationLayout.setTextViewText(R.id.headline_text, contentTitle);
     bigNotificationLayout.setTextViewText(R.id.content_text, contentBody);
-    builder.setStyle(new NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(notificationLayout)
-            .setCustomHeadsUpContentView(notificationLayout)
-            .setCustomBigContentView(bigNotificationLayout)
-            .setLargeIcon((Bitmap) null);
+    builder
+        .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+        .setCustomContentView(notificationLayout)
+        .setCustomHeadsUpContentView(notificationLayout)
+        .setCustomBigContentView(bigNotificationLayout)
+        .setLargeIcon((Bitmap) null);
   }
 
   private static void setBigPictureStyle(
@@ -1484,7 +1489,8 @@ public class FlutterLocalNotificationsPlugin
             && !launchedActivityFromHistory(intent);
 
     if (notificationLaunchedApp) {
-      notificationAppLaunchDetails.put("notificationResponse", extractNotificationResponseMap(intent));
+      notificationAppLaunchDetails.put(
+          "notificationResponse", extractNotificationResponseMap(intent));
     }
 
     notificationAppLaunchDetails.put(NOTIFICATION_LAUNCHED_APP, notificationLaunchedApp);
@@ -1520,7 +1526,8 @@ public class FlutterLocalNotificationsPlugin
     }
 
     Intent launchIntent = mainActivity.getIntent();
-    Map<String, Object> notificationAppLaunchDetails = buildNotificationAppLaunchDetails(launchIntent);
+    Map<String, Object> notificationAppLaunchDetails =
+        buildNotificationAppLaunchDetails(launchIntent);
 
     for (PendingLaunchDetailsResult pendingResult : pendingLaunchDetailsResults) {
       mainThreadHandler.removeCallbacks(pendingResult.timeoutRunnable);

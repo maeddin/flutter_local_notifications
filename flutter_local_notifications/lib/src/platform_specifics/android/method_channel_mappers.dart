@@ -246,8 +246,8 @@ extension AndroidNotificationDetailsMapper on AndroidNotificationDetails {
     if (styleInformation is BigIconStyleInformation) {
       return <String, Object?>{
         'style': AndroidNotificationStyle.bigIcon.index,
-        'styleInformation':
-            (styleInformation as BigIconStyleInformation?)?.toMap(),
+        'styleInformation': (styleInformation as BigIconStyleInformation?)
+            ?.toMap(),
       };
     } else if (styleInformation is BigPictureStyleInformation) {
       return <String, Object?>{

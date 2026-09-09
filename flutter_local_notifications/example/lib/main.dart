@@ -1904,10 +1904,10 @@ class _HomePageState extends State<HomePage> {
       android: androidNotificationDetails,
     );
     await flutterLocalNotificationsPlugin.show(
-      id++,
-      'big icon title',
-      'big icon body',
-      notificationDetails,
+      id: id++,
+      title: 'big icon title',
+      body: 'big icon body',
+      notificationDetails: notificationDetails,
     );
   }
 
