@@ -13,8 +13,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   group('macOS', () {
-    const MethodChannel channel =
-        MethodChannel('dexterous.com/flutter/local_notifications');
+    const MethodChannel channel = MethodChannel(
+      'dexterous.com/flutter/local_notifications',
+    );
     final List<MethodCall> log = <MethodCall>[];
 
     setUp(() {
@@ -22,16 +23,18 @@ void main() {
       flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-        log.add(methodCall);
-        if (methodCall.method == 'pendingNotificationRequests') {
-          return <Map<String, Object>?>[];
-        } else if (methodCall.method == 'getActiveNotifications') {
-          return <Map<String, Object>?>[];
-        } else if (methodCall.method == 'getNotificationAppLaunchDetails') {
-          return null;
-        }
-        return null;
-      });
+            log.add(methodCall);
+            if (methodCall.method == 'pendingNotificationRequests') {
+              return <Map<String, Object>?>[];
+            } else if (methodCall.method == 'getActiveNotifications') {
+              return <Map<String, Object>?>[];
+            } else if (methodCall.method == 'getNotificationAppLaunchDetails') {
+              return null;
+            } else if (methodCall.method == 'openAppNotificationSettings') {
+              return true;
+            }
+            return null;
+          });
     });
 
     tearDown(() {
@@ -43,55 +46,65 @@ void main() {
           DarwinInitializationSettings();
       const InitializationSettings initializationSettings =
           InitializationSettings(macOS: macOSInitializationSettings);
-      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+      await flutterLocalNotificationsPlugin.initialize(
+        settings: initializationSettings,
+      );
       expect(log, <Matcher>[
-        isMethodCall('initialize', arguments: <String, Object>{
-          'requestAlertPermission': true,
-          'requestSoundPermission': true,
-          'requestBadgePermission': true,
-          'requestProvisionalPermission': false,
-          'requestCriticalPermission': false,
-          'requestProvidesAppNotificationSettings': false,
-          'defaultPresentAlert': true,
-          'defaultPresentSound': true,
-          'defaultPresentBadge': true,
-          'defaultPresentBanner': true,
-          'defaultPresentList': true,
-          'notificationCategories': <Map<String, String>>[],
-        })
+        isMethodCall(
+          'initialize',
+          arguments: <String, Object>{
+            'requestAlertPermission': true,
+            'requestSoundPermission': true,
+            'requestBadgePermission': true,
+            'requestProvisionalPermission': false,
+            'requestCriticalPermission': false,
+            'requestProvidesAppNotificationSettings': false,
+            'defaultPresentAlert': true,
+            'defaultPresentSound': true,
+            'defaultPresentBadge': true,
+            'defaultPresentBanner': true,
+            'defaultPresentList': true,
+            'notificationCategories': <Map<String, String>>[],
+          },
+        ),
       ]);
     });
 
     test('initialize with all settings off', () async {
       const DarwinInitializationSettings macOSInitializationSettings =
           DarwinInitializationSettings(
-        requestAlertPermission: false,
-        requestBadgePermission: false,
-        requestSoundPermission: false,
-        defaultPresentAlert: false,
-        defaultPresentBadge: false,
-        defaultPresentSound: false,
-        defaultPresentBanner: false,
-        defaultPresentList: false,
-      );
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+            defaultPresentAlert: false,
+            defaultPresentBadge: false,
+            defaultPresentSound: false,
+            defaultPresentBanner: false,
+            defaultPresentList: false,
+          );
       const InitializationSettings initializationSettings =
           InitializationSettings(macOS: macOSInitializationSettings);
-      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+      await flutterLocalNotificationsPlugin.initialize(
+        settings: initializationSettings,
+      );
       expect(log, <Matcher>[
-        isMethodCall('initialize', arguments: <String, Object>{
-          'requestAlertPermission': false,
-          'requestSoundPermission': false,
-          'requestBadgePermission': false,
-          'requestProvisionalPermission': false,
-          'requestCriticalPermission': false,
-          'requestProvidesAppNotificationSettings': false,
-          'defaultPresentAlert': false,
-          'defaultPresentSound': false,
-          'defaultPresentBadge': false,
-          'defaultPresentBanner': false,
-          'defaultPresentList': false,
-          'notificationCategories': <Map<String, String>>[],
-        })
+        isMethodCall(
+          'initialize',
+          arguments: <String, Object>{
+            'requestAlertPermission': false,
+            'requestSoundPermission': false,
+            'requestBadgePermission': false,
+            'requestProvisionalPermission': false,
+            'requestCriticalPermission': false,
+            'requestProvidesAppNotificationSettings': false,
+            'defaultPresentAlert': false,
+            'defaultPresentSound': false,
+            'defaultPresentBadge': false,
+            'defaultPresentBanner': false,
+            'defaultPresentList': false,
+            'notificationCategories': <Map<String, String>>[],
+          },
+        ),
       ]);
     });
 
@@ -100,18 +113,27 @@ void main() {
           DarwinInitializationSettings();
       const InitializationSettings initializationSettings =
           InitializationSettings(macOS: macOSInitializationSettings);
-      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+      await flutterLocalNotificationsPlugin.initialize(
+        settings: initializationSettings,
+      );
       await flutterLocalNotificationsPlugin.show(
-          1, 'notification title', 'notification body', null);
+        id: 1,
+        title: 'notification title',
+        body: 'notification body',
+      );
       expect(
-          log.last,
-          isMethodCall('show', arguments: <String, Object?>{
+        log.last,
+        isMethodCall(
+          'show',
+          arguments: <String, Object?>{
             'id': 1,
             'title': 'notification title',
             'body': 'notification body',
             'payload': '',
             'platformSpecifics': null,
-          }));
+          },
+        ),
+      );
     });
 
     test('show with macOS-specific details', () async {
@@ -119,7 +141,9 @@ void main() {
           DarwinInitializationSettings();
       const InitializationSettings initializationSettings =
           InitializationSettings(macOS: macOSInitializationSettings);
-      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+      await flutterLocalNotificationsPlugin.initialize(
+        settings: initializationSettings,
+      );
       const NotificationDetails notificationDetails = NotificationDetails(
         macOS: DarwinNotificationDetails(
           subtitle: 'a subtitle',
@@ -144,10 +168,10 @@ void main() {
       );
 
       await flutterLocalNotificationsPlugin.show(
-        1,
-        'notification title',
-        'notification body',
-        notificationDetails,
+        id: 1,
+        title: 'notification title',
+        body: 'notification body',
+        notificationDetails: notificationDetails,
       );
 
       expect(
@@ -175,11 +199,12 @@ void main() {
                   'identifier': '2b3f705f-a680-4c9f-8075-a46a70e28373',
                   'hideThumbnail': null,
                   'thumbnailClippingRect': null,
-                }
+                },
               ],
               'categoryIdentifier': 'category1',
               'interruptionLevel': 2,
               'criticalSoundVolume': 0.5,
+              'dismissIsolate': null,
             },
           },
         ),
@@ -195,8 +220,9 @@ void main() {
                 DarwinInitializationSettings();
             const InitializationSettings initializationSettings =
                 InitializationSettings(macOS: macOSInitializationSettings);
-            await flutterLocalNotificationsPlugin
-                .initialize(initializationSettings);
+            await flutterLocalNotificationsPlugin.initialize(
+              settings: initializationSettings,
+            );
 
             const NotificationDetails notificationDetails = NotificationDetails(
               macOS: DarwinNotificationDetails(
@@ -211,23 +237,25 @@ void main() {
                   DarwinNotificationAttachment(
                     'video.mp4',
                     identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373',
-                  )
+                  ),
                 ],
               ),
             );
 
             await flutterLocalNotificationsPlugin.periodicallyShow(
-              1,
-              'notification title',
-              'notification body',
-              repeatInterval,
-              notificationDetails,
+              id: 1,
+              title: 'notification title',
+              body: 'notification body',
+              repeatInterval: repeatInterval,
+              notificationDetails: notificationDetails,
               androidScheduleMode: AndroidScheduleMode.exact,
             );
 
             expect(
-                log.last,
-                isMethodCall('periodicallyShow', arguments: <String, Object>{
+              log.last,
+              isMethodCall(
+                'periodicallyShow',
+                arguments: <String, Object>{
                   'id': 1,
                   'title': 'notification title',
                   'body': 'notification body',
@@ -250,13 +278,16 @@ void main() {
                         'identifier': '2b3f705f-a680-4c9f-8075-a46a70e28373',
                         'hideThumbnail': null,
                         'thumbnailClippingRect': null,
-                      }
+                      },
                     ],
                     'categoryIdentifier': null,
                     'interruptionLevel': null,
                     'criticalSoundVolume': null,
+                    'dismissIsolate': null,
                   },
-                }));
+                },
+              ),
+            );
           });
         });
       }
@@ -272,8 +303,9 @@ void main() {
               DarwinInitializationSettings();
           const InitializationSettings initializationSettings =
               InitializationSettings(macOS: macOSInitializationSettings);
-          await flutterLocalNotificationsPlugin
-              .initialize(initializationSettings);
+          await flutterLocalNotificationsPlugin.initialize(
+            settings: initializationSettings,
+          );
 
           const NotificationDetails notificationDetails = NotificationDetails(
             macOS: DarwinNotificationDetails(
@@ -288,21 +320,22 @@ void main() {
                 DarwinNotificationAttachment(
                   'video.mp4',
                   identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373',
-                )
+                ),
               ],
             ),
           );
 
           expect(
-              () async => await flutterLocalNotificationsPlugin
-                      .periodicallyShowWithDuration(
-                    1,
-                    'notification title',
-                    'notification body',
-                    thirtySeconds,
-                    notificationDetails,
-                  ),
-              throwsA(isA<ArgumentError>()));
+            () async => await flutterLocalNotificationsPlugin
+                .periodicallyShowWithDuration(
+                  id: 1,
+                  title: 'notification title',
+                  body: 'notification body',
+                  repeatDurationInterval: thirtySeconds,
+                  notificationDetails: notificationDetails,
+                ),
+            throwsA(isA<ArgumentError>()),
+          );
         });
       });
 
@@ -310,7 +343,7 @@ void main() {
         const Duration(minutes: 1),
         const Duration(minutes: 15),
         const Duration(hours: 5),
-        const Duration(days: 30)
+        const Duration(days: 30),
       ];
 
       for (final Duration repeatDurationInterval in repeatDurationIntervals) {
@@ -320,8 +353,9 @@ void main() {
                 DarwinInitializationSettings();
             const InitializationSettings initializationSettings =
                 InitializationSettings(macOS: macOSInitializationSettings);
-            await flutterLocalNotificationsPlugin
-                .initialize(initializationSettings);
+            await flutterLocalNotificationsPlugin.initialize(
+              settings: initializationSettings,
+            );
 
             const NotificationDetails notificationDetails = NotificationDetails(
               macOS: DarwinNotificationDetails(
@@ -336,54 +370,57 @@ void main() {
                   DarwinNotificationAttachment(
                     'video.mp4',
                     identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373',
-                  )
+                  ),
                 ],
               ),
             );
 
             await flutterLocalNotificationsPlugin.periodicallyShowWithDuration(
-              1,
-              'notification title',
-              'notification body',
-              repeatDurationInterval,
-              notificationDetails,
+              id: 1,
+              title: 'notification title',
+              body: 'notification body',
+              repeatDurationInterval: repeatDurationInterval,
+              notificationDetails: notificationDetails,
             );
 
             expect(
-                log.last,
-                isMethodCall('periodicallyShowWithDuration',
-                    arguments: <String, Object>{
-                      'id': 1,
-                      'title': 'notification title',
-                      'body': 'notification body',
-                      'payload': '',
-                      'calledAt': now.millisecondsSinceEpoch,
-                      'repeatIntervalMilliseconds':
-                          repeatDurationInterval.inMilliseconds,
-                      'platformSpecifics': <String, Object?>{
-                        'presentAlert': true,
-                        'presentBadge': true,
-                        'presentSound': true,
-                        'presentBanner': true,
-                        'presentList': true,
-                        'subtitle': null,
-                        'sound': 'sound.mp3',
-                        'badgeNumber': 1,
-                        'threadIdentifier': null,
-                        'attachments': <Map<String, Object?>>[
-                          <String, Object?>{
-                            'filePath': 'video.mp4',
-                            'identifier':
-                                '2b3f705f-a680-4c9f-8075-a46a70e28373',
-                            'hideThumbnail': null,
-                            'thumbnailClippingRect': null,
-                          }
-                        ],
-                        'categoryIdentifier': null,
-                        'interruptionLevel': null,
-                        'criticalSoundVolume': null,
+              log.last,
+              isMethodCall(
+                'periodicallyShowWithDuration',
+                arguments: <String, Object>{
+                  'id': 1,
+                  'title': 'notification title',
+                  'body': 'notification body',
+                  'payload': '',
+                  'calledAt': now.millisecondsSinceEpoch,
+                  'repeatIntervalMilliseconds':
+                      repeatDurationInterval.inMilliseconds,
+                  'platformSpecifics': <String, Object?>{
+                    'presentAlert': true,
+                    'presentBadge': true,
+                    'presentSound': true,
+                    'presentBanner': true,
+                    'presentList': true,
+                    'subtitle': null,
+                    'sound': 'sound.mp3',
+                    'badgeNumber': 1,
+                    'threadIdentifier': null,
+                    'attachments': <Map<String, Object?>>[
+                      <String, Object?>{
+                        'filePath': 'video.mp4',
+                        'identifier': '2b3f705f-a680-4c9f-8075-a46a70e28373',
+                        'hideThumbnail': null,
+                        'thumbnailClippingRect': null,
                       },
-                    }));
+                    ],
+                    'categoryIdentifier': null,
+                    'interruptionLevel': null,
+                    'criticalSoundVolume': null,
+                    'dismissIsolate': null,
+                  },
+                },
+              ),
+            );
           });
         });
       }
@@ -395,12 +432,14 @@ void main() {
             DarwinInitializationSettings();
         const InitializationSettings initializationSettings =
             InitializationSettings(macOS: macOSInitializationSettings);
-        await flutterLocalNotificationsPlugin
-            .initialize(initializationSettings);
+        await flutterLocalNotificationsPlugin.initialize(
+          settings: initializationSettings,
+        );
         tz.initializeTimeZones();
         tz.setLocalLocation(tz.getLocation('Australia/Sydney'));
-        final tz.TZDateTime scheduledDate =
-            tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
+        final tz.TZDateTime scheduledDate = tz.TZDateTime.now(
+          tz.local,
+        ).add(const Duration(seconds: 5));
         const NotificationDetails notificationDetails = NotificationDetails(
           macOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -411,23 +450,28 @@ void main() {
             sound: 'sound.mp3',
             badgeNumber: 1,
             attachments: <DarwinNotificationAttachment>[
-              DarwinNotificationAttachment('video.mp4',
-                  identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373')
+              DarwinNotificationAttachment(
+                'video.mp4',
+                identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373',
+              ),
             ],
           ),
         );
 
         await flutterLocalNotificationsPlugin.zonedSchedule(
-            1,
-            'notification title',
-            'notification body',
-            scheduledDate,
-            notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
+          id: 1,
+          title: 'notification title',
+          body: 'notification body',
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        );
 
         expect(
-            log.last,
-            isMethodCall('zonedSchedule', arguments: <String, Object>{
+          log.last,
+          isMethodCall(
+            'zonedSchedule',
+            arguments: <String, Object>{
               'id': 1,
               'title': 'notification title',
               'body': 'notification body',
@@ -451,13 +495,16 @@ void main() {
                     'identifier': '2b3f705f-a680-4c9f-8075-a46a70e28373',
                     'hideThumbnail': null,
                     'thumbnailClippingRect': null,
-                  }
+                  },
                 ],
                 'categoryIdentifier': null,
                 'interruptionLevel': null,
                 'criticalSoundVolume': null,
+                'dismissIsolate': null,
               },
-            }));
+            },
+          ),
+        );
       });
 
       test('match time components', () async {
@@ -465,12 +512,14 @@ void main() {
             DarwinInitializationSettings();
         const InitializationSettings initializationSettings =
             InitializationSettings(macOS: macOSInitializationSettings);
-        await flutterLocalNotificationsPlugin
-            .initialize(initializationSettings);
+        await flutterLocalNotificationsPlugin.initialize(
+          settings: initializationSettings,
+        );
         tz.initializeTimeZones();
         tz.setLocalLocation(tz.getLocation('Australia/Sydney'));
-        final tz.TZDateTime scheduledDate =
-            tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
+        final tz.TZDateTime scheduledDate = tz.TZDateTime.now(
+          tz.local,
+        ).add(const Duration(seconds: 5));
         const NotificationDetails notificationDetails = NotificationDetails(
           macOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -481,18 +530,20 @@ void main() {
             sound: 'sound.mp3',
             badgeNumber: 1,
             attachments: <DarwinNotificationAttachment>[
-              DarwinNotificationAttachment('video.mp4',
-                  identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373')
+              DarwinNotificationAttachment(
+                'video.mp4',
+                identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373',
+              ),
             ],
           ),
         );
 
         await flutterLocalNotificationsPlugin.zonedSchedule(
-          1,
-          'notification title',
-          'notification body',
-          scheduledDate,
-          notificationDetails,
+          id: 1,
+          title: 'notification title',
+          body: 'notification body',
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.time,
         );
@@ -526,11 +577,12 @@ void main() {
                     'identifier': '2b3f705f-a680-4c9f-8075-a46a70e28373',
                     'hideThumbnail': null,
                     'thumbnailClippingRect': null,
-                  }
+                  },
                 ],
                 'categoryIdentifier': null,
                 'interruptionLevel': null,
                 'criticalSoundVolume': null,
+                'dismissIsolate': null,
               },
             },
           ),
@@ -542,12 +594,14 @@ void main() {
             DarwinInitializationSettings();
         const InitializationSettings initializationSettings =
             InitializationSettings(macOS: macOSInitializationSettings);
-        await flutterLocalNotificationsPlugin
-            .initialize(initializationSettings);
+        await flutterLocalNotificationsPlugin.initialize(
+          settings: initializationSettings,
+        );
         tz.initializeTimeZones();
         tz.setLocalLocation(tz.getLocation('Australia/Sydney'));
-        final tz.TZDateTime scheduledDate =
-            tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
+        final tz.TZDateTime scheduledDate = tz.TZDateTime.now(
+          tz.local,
+        ).add(const Duration(seconds: 5));
         const NotificationDetails notificationDetails = NotificationDetails(
           macOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -558,18 +612,20 @@ void main() {
             sound: 'sound.mp3',
             badgeNumber: 1,
             attachments: <DarwinNotificationAttachment>[
-              DarwinNotificationAttachment('video.mp4',
-                  identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373')
+              DarwinNotificationAttachment(
+                'video.mp4',
+                identifier: '2b3f705f-a680-4c9f-8075-a46a70e28373',
+              ),
             ],
           ),
         );
 
         await flutterLocalNotificationsPlugin.zonedSchedule(
-          1,
-          'notification title',
-          'notification body',
-          scheduledDate,
-          notificationDetails,
+          id: 1,
+          title: 'notification title',
+          body: 'notification body',
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         );
@@ -604,11 +660,12 @@ void main() {
                     'identifier': '2b3f705f-a680-4c9f-8075-a46a70e28373',
                     'hideThumbnail': null,
                     'thumbnailClippingRect': null,
-                  }
+                  },
                 ],
                 'categoryIdentifier': null,
                 'interruptionLevel': null,
                 'criticalSoundVolume': null,
+                'dismissIsolate': null,
               },
             },
           ),
@@ -619,23 +676,28 @@ void main() {
     test('requestPermissions with default settings', () async {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              MacOSFlutterLocalNotificationsPlugin>()!
+            MacOSFlutterLocalNotificationsPlugin
+          >()!
           .requestPermissions();
       expect(log, <Matcher>[
-        isMethodCall('requestPermissions', arguments: <String, Object?>{
-          'sound': false,
-          'badge': false,
-          'alert': false,
-          'provisional': false,
-          'critical': false,
-          'providesAppNotificationSettings': false
-        })
+        isMethodCall(
+          'requestPermissions',
+          arguments: <String, Object?>{
+            'sound': false,
+            'badge': false,
+            'alert': false,
+            'provisional': false,
+            'critical': false,
+            'providesAppNotificationSettings': false,
+          },
+        ),
       ]);
     });
     test('requestPermissions with all settings requested', () async {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              MacOSFlutterLocalNotificationsPlugin>()!
+            MacOSFlutterLocalNotificationsPlugin
+          >()!
           .requestPermissions(
             sound: true,
             badge: true,
@@ -643,31 +705,55 @@ void main() {
             provisional: true,
             critical: true,
           );
-      expect(
-        log,
-        <Matcher>[
-          isMethodCall('requestPermissions', arguments: <String, Object?>{
+      expect(log, <Matcher>[
+        isMethodCall(
+          'requestPermissions',
+          arguments: <String, Object?>{
             'sound': true,
             'badge': true,
             'alert': true,
             'provisional': true,
             'critical': true,
             'providesAppNotificationSettings': false,
-          })
-        ],
-      );
+          },
+        ),
+      ]);
     });
 
     test('checkPermissions', () async {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              MacOSFlutterLocalNotificationsPlugin>()!
+            MacOSFlutterLocalNotificationsPlugin
+          >()!
           .checkPermissions();
       expect(log, <Matcher>[isMethodCall('checkPermissions', arguments: null)]);
     });
 
+    test('openAppNotificationSettings', () async {
+      final bool? opened = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin
+          >()!
+          .openAppNotificationSettings();
+      expect(opened, isTrue);
+      expect(
+        log.last,
+        isMethodCall('openAppNotificationSettings', arguments: null),
+      );
+    });
+
+    test('openAppNotificationSettings (cross-platform)', () async {
+      final bool? opened = await flutterLocalNotificationsPlugin
+          .openAppNotificationSettings();
+      expect(opened, isTrue);
+      expect(
+        log.last,
+        isMethodCall('openAppNotificationSettings', arguments: null),
+      );
+    });
+
     test('cancel', () async {
-      await flutterLocalNotificationsPlugin.cancel(1);
+      await flutterLocalNotificationsPlugin.cancel(id: 1);
       expect(log, <Matcher>[isMethodCall('cancel', arguments: 1)]);
     });
 
@@ -679,38 +765,41 @@ void main() {
     test('cancelAllPendingNotifications', () async {
       await flutterLocalNotificationsPlugin.cancelAllPendingNotifications();
       expect(log, <Matcher>[
-        isMethodCall('cancelAllPendingNotifications', arguments: null)
+        isMethodCall('cancelAllPendingNotifications', arguments: null),
       ]);
     });
 
     test('pendingNotificationRequests', () async {
       await flutterLocalNotificationsPlugin.pendingNotificationRequests();
       expect(log, <Matcher>[
-        isMethodCall('pendingNotificationRequests', arguments: null)
+        isMethodCall('pendingNotificationRequests', arguments: null),
       ]);
     });
 
     test('getActiveNotifications', () async {
       await flutterLocalNotificationsPlugin.getActiveNotifications();
-      expect(log,
-          <Matcher>[isMethodCall('getActiveNotifications', arguments: null)]);
+      expect(log, <Matcher>[
+        isMethodCall('getActiveNotifications', arguments: null),
+      ]);
     });
 
     test('getNotificationAppLaunchDetails', () async {
       await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
       expect(log, <Matcher>[
-        isMethodCall('getNotificationAppLaunchDetails', arguments: null)
+        isMethodCall('getNotificationAppLaunchDetails', arguments: null),
       ]);
     });
 
     test('initialize with providesAppNotificationSettings', () async {
       const DarwinInitializationSettings macOSInitializationSettings =
           DarwinInitializationSettings(
-        requestProvidesAppNotificationSettings: true,
-      );
+            requestProvidesAppNotificationSettings: true,
+          );
       const InitializationSettings initializationSettings =
           InitializationSettings(macOS: macOSInitializationSettings);
-      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+      await flutterLocalNotificationsPlugin.initialize(
+        settings: initializationSettings,
+      );
       expect(log, <Matcher>[
         isMethodCall(
           'initialize',
@@ -735,7 +824,8 @@ void main() {
     test('requestPermissions with providesAppNotificationSettings', () async {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              MacOSFlutterLocalNotificationsPlugin>()
+            MacOSFlutterLocalNotificationsPlugin
+          >()
           ?.requestPermissions(
             alert: true,
             badge: true,
@@ -760,7 +850,8 @@ void main() {
     test('macOS requestPermissions with all settings requested', () async {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              MacOSFlutterLocalNotificationsPlugin>()!
+            MacOSFlutterLocalNotificationsPlugin
+          >()!
           .requestPermissions(
             sound: true,
             badge: true,
@@ -770,14 +861,17 @@ void main() {
             providesAppNotificationSettings: true,
           );
       expect(log, <Matcher>[
-        isMethodCall('requestPermissions', arguments: <String, Object?>{
-          'sound': true,
-          'alert': true,
-          'badge': true,
-          'provisional': true,
-          'critical': true,
-          'providesAppNotificationSettings': true
-        })
+        isMethodCall(
+          'requestPermissions',
+          arguments: <String, Object?>{
+            'sound': true,
+            'alert': true,
+            'badge': true,
+            'provisional': true,
+            'critical': true,
+            'providesAppNotificationSettings': true,
+          },
+        ),
       ]);
     });
   });

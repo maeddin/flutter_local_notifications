@@ -11,6 +11,7 @@ class NotificationsEnabledOptions {
     required this.isProvisionalEnabled,
     required this.isCriticalEnabled,
     required this.isProvidesAppNotificationSettingsEnabled,
+    this.isCarPlayEnabled = false,
   });
 
   /// Whenever notifications are enabled.
@@ -38,10 +39,15 @@ class NotificationsEnabledOptions {
   /// Whether the app has requested providesAppNotificationSettings permission.
   ///
   /// On iOS, when true, the system displays a
-  /// "Configure Notifications in <application name>" button in the
+  /// "Configure Notifications in \<application name\>" button in the
   /// notification's context menu.
   ///
   /// On macOS, the permission can be requested and this value reports
   /// correctly, but the UI button does not appear in practice.
   final bool isProvidesAppNotificationSettingsEnabled;
+
+  /// Whether CarPlay notifications are enabled.
+  ///
+  ///  This property is only applicable to iOS 10 or newer.
+  final bool isCarPlayEnabled;
 }

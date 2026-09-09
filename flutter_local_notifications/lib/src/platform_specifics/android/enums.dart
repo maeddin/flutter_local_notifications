@@ -49,7 +49,7 @@ enum AndroidNotificationStyle {
   messaging,
 
   /// The media style.
-  media
+  media,
 }
 
 /// Specifies the source for a sound used by Android notifications.
@@ -68,7 +68,7 @@ enum AndroidNotificationChannelAction {
 
   /// Updates the details of an existing channel. Note that some details can
   /// not be changed once a channel has been created.
-  update
+  update,
 }
 
 /// The available foreground types for an Android service.
@@ -139,7 +139,7 @@ enum AndroidServiceStartType {
   startNotSticky,
 
   /// Corresponds to [`Service.START_REDELIVER_INTENT`](https://developer.android.com/reference/android/app/Service#START_REDELIVER_INTENT).
-  startRedeliverIntent
+  startRedeliverIntent,
 }
 
 /// The available importance levels for Android notifications.
@@ -208,7 +208,7 @@ enum GroupAlertBehavior {
   summary,
 
   /// The summary notification in a group should be silenced.
-  children
+  children,
 }
 
 /// Defines the notification visibility on the lockscreen.

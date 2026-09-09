@@ -76,6 +76,7 @@ public class NotificationDetails implements Serializable {
   private static final String BIG_PICTURE = "bigPicture";
   private static final String BIG_PICTURE_BITMAP_SOURCE = "bigPictureBitmapSource";
   private static final String HIDE_EXPANDED_LARGE_ICON = "hideExpandedLargeIcon";
+  private static final String SHOW_BIG_PICTURE_WHEN_COLLAPSED = "showBigPictureWhenCollapsed";
   private static final String SHOW_PROGRESS = "showProgress";
   private static final String MAX_PROGRESS = "maxProgress";
   private static final String PROGRESS = "progress";
@@ -122,6 +123,7 @@ public class NotificationDetails implements Serializable {
   private static final String MATCH_DATE_TIME_COMPONENTS = "matchDateTimeComponents";
 
   private static final String FULL_SCREEN_INTENT = "fullScreenIntent";
+  private static final String DISMISS_ISOLATE = "dismissIsolate";
   private static final String SHORTCUT_ID = "shortcutId";
   private static final String SUB_TEXT = "subText";
   private static final String ACTIONS = "actions";
@@ -191,6 +193,7 @@ public class NotificationDetails implements Serializable {
   public DateTimeComponents matchDateTimeComponents;
   public Long when;
   public Boolean fullScreenIntent;
+  public Integer dismissIsolate;
   public String shortcutId;
   public String subText;
   public @Nullable List<NotificationAction> actions;
@@ -290,6 +293,7 @@ public class NotificationDetails implements Serializable {
       notificationDetails.category = (String) platformChannelSpecifics.get(CATEGORY);
       notificationDetails.fullScreenIntent =
           (Boolean) platformChannelSpecifics.get((FULL_SCREEN_INTENT));
+      notificationDetails.dismissIsolate = (Integer) platformChannelSpecifics.get(DISMISS_ISOLATE);
       notificationDetails.shortcutId = (String) platformChannelSpecifics.get(SHORTCUT_ID);
       notificationDetails.additionalFlags = (int[]) platformChannelSpecifics.get(ADDITIONAL_FLAGS);
       notificationDetails.subText = (String) platformChannelSpecifics.get(SUB_TEXT);
@@ -544,6 +548,8 @@ public class NotificationDetails implements Serializable {
         (Integer) styleInformation.get(BIG_PICTURE_BITMAP_SOURCE);
     BitmapSource bigPictureBitmapSource = BitmapSource.values()[bigPictureBitmapSourceArgument];
     Boolean showThumbnail = (Boolean) styleInformation.get(HIDE_EXPANDED_LARGE_ICON);
+    Boolean showBigPictureWhenCollapsed =
+        (Boolean) styleInformation.get(SHOW_BIG_PICTURE_WHEN_COLLAPSED);
     notificationDetails.styleInformation =
         new BigPictureStyleInformation(
             defaultStyleInformation.htmlFormatTitle,
@@ -556,7 +562,8 @@ public class NotificationDetails implements Serializable {
             largeIconBitmapSource,
             bigPicture,
             bigPictureBitmapSource,
-            showThumbnail);
+            showThumbnail,
+            showBigPictureWhenCollapsed);
   }
 
   private static DefaultStyleInformation getDefaultStyleInformation(

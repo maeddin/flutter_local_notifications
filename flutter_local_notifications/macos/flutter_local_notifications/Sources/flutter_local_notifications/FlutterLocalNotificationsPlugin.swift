@@ -33,6 +33,7 @@ public class FlutterLocalNotificationsPlugin: NSObject, FlutterPlugin, UNUserNot
         static let title = "title"
         static let subtitle = "subtitle"
         static let categoryIdentifier = "categoryIdentifier"
+        static let dismissIsolate = "dismissIsolate"
         static let body = "body"
         static let scheduledDateTime = "scheduledDateTimeISO8601"
         static let timeZoneName = "timeZoneName"
@@ -150,9 +151,13 @@ public class FlutterLocalNotificationsPlugin: NSObject, FlutterPlugin, UNUserNot
             }
 
             completionHandler()
-        } else if response.actionIdentifier == UNNotificationDismissActionIdentifier {
-            completionHandler()
         } else {
+            // Only report a dismissal when opted in via dismissIsolate.
+            if response.actionIdentifier == UNNotificationDismissActionIdentifier,
+                response.notification.request.content.userInfo[MethodCallArguments.dismissIsolate] == nil {
+                completionHandler()
+                return
+            }
             if initialized {
                 // No isolate can be used for macOS until https://github.com/flutter/flutter/issues/65222 is resolved.
                 //
@@ -177,6 +182,8 @@ public class FlutterLocalNotificationsPlugin: NSObject, FlutterPlugin, UNUserNot
             requestPermissions(call, result)
         case "checkPermissions":
             checkPermissions(call, result)
+        case "openAppNotificationSettings":
+            openAppNotificationSettings(result)
         case "getNotificationAppLaunchDetails":
             getNotificationAppLaunchDetails(result)
         case "cancel":
@@ -343,7 +350,16 @@ public class FlutterLocalNotificationsPlugin: NSObject, FlutterPlugin, UNUserNot
         UNUserNotificationCenter.current().getDeliveredNotifications { (requests) in
             var requestDictionaries: [[String: Any?]] = []
             for request in requests {
-                requestDictionaries.append([MethodCallArguments.id: Int(request.request.identifier) as Any, MethodCallArguments.title: request.request.content.title, MethodCallArguments.body: request.request.content.body, MethodCallArguments.payload: request.request.content.userInfo[MethodCallArguments.payload]])
+                var dict: [String: Any?] = [
+                    MethodCallArguments.id: Int(request.request.identifier) as Any,
+                    MethodCallArguments.title: request.request.content.title,
+                    MethodCallArguments.body: request.request.content.body,
+                    MethodCallArguments.payload: request.request.content.userInfo[MethodCallArguments.payload]
+                ]
+                if !request.request.content.threadIdentifier.isEmpty {
+                    dict["groupKey"] = request.request.content.threadIdentifier
+                }
+                requestDictionaries.append(dict)
             }
             result(requestDictionaries)
         }
@@ -474,6 +490,10 @@ public class FlutterLocalNotificationsPlugin: NSObject, FlutterPlugin, UNUserNot
         content.userInfo = [MethodCallArguments.payload: arguments[MethodCallArguments.payload] as Any, MethodCallArguments.presentSound: presentSound, MethodCallArguments.presentBadge: presentBadge, MethodCallArguments.presentAlert: presentAlert,
                             MethodCallArguments.presentBanner: presentBanner,
                             MethodCallArguments.presentList: presentList]
+        if let platformSpecifics = arguments[MethodCallArguments.platformSpecifics] as? [String: AnyObject],
+            let dismissIsolate = platformSpecifics[MethodCallArguments.dismissIsolate], !(dismissIsolate is NSNull) {
+            content.userInfo[MethodCallArguments.dismissIsolate] = dismissIsolate
+        }
         if presentSound && content.sound == nil {
             content.sound = UNNotificationSound.default
         }
@@ -582,6 +602,32 @@ public class FlutterLocalNotificationsPlugin: NSObject, FlutterPlugin, UNUserNot
         }
     }
 
+    func openAppNotificationSettings(_ result: @escaping FlutterResult) {
+        let notificationsPath = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
+
+        guard let bundleId = Bundle.main.bundleIdentifier else { return }
+        var openedAppNotificationSettings = false
+        if let url = URL(string: "\(notificationsPath)?id=\(bundleId)") {
+            openedAppNotificationSettings = NSWorkspace.shared.open(url)
+        }
+
+        if openedAppNotificationSettings {
+            result(openedAppNotificationSettings)
+            return
+        }
+
+        openNotificationSettings(result)
+    }
+
+    func openNotificationSettings(_ result: @escaping FlutterResult) {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") else {
+            result(false)
+            return
+        }
+
+        result(NSWorkspace.shared.open(url))
+    }
+
     func getIdentifier(fromArguments arguments: [String: AnyObject]) -> String {
         return String(arguments[MethodCallArguments.id] as! Int)
     }
@@ -603,7 +649,9 @@ public class FlutterLocalNotificationsPlugin: NSObject, FlutterPlugin, UNUserNot
         notificationResponseDict["notificationId"] = Int(response.notification.request.identifier)!
         if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
             notificationResponseDict[MethodCallArguments.notificationResponseType] = 0
-        } else if response.actionIdentifier != UNNotificationDismissActionIdentifier {
+        } else if response.actionIdentifier == UNNotificationDismissActionIdentifier {
+            notificationResponseDict[MethodCallArguments.notificationResponseType] = 2
+        } else {
             notificationResponseDict[MethodCallArguments.actionId] = response.actionIdentifier
             notificationResponseDict[MethodCallArguments.notificationResponseType] = 1
         }
