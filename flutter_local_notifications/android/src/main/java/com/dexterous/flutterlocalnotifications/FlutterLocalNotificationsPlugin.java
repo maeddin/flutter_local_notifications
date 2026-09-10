@@ -315,8 +315,6 @@ public class FlutterLocalNotificationsPlugin
             .setSilent(BooleanUtils.getValue(notificationDetails.silent))
             .setOnlyAlertOnce(BooleanUtils.getValue(notificationDetails.onlyAlertOnce));
 
-    System.out.println("NOTIFICATION ACTIONS: " + notificationDetails.actions);
-
     if (notificationDetails.dismissIsolate != null) {
       Intent deleteIntent = new Intent(context, ActionBroadcastReceiver.class);
       deleteIntent.setAction(ActionBroadcastReceiver.ACTION_DISMISSED);
