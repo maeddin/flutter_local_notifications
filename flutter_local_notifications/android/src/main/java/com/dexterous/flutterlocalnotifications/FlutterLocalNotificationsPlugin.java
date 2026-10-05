@@ -221,6 +221,7 @@ public class FlutterLocalNotificationsPlugin
   private Activity mainActivity;
   private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
   private final List<PendingLaunchDetailsResult> pendingLaunchDetailsResults = new ArrayList<>();
+  private boolean launchDetailsRequested;
   static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1;
 
   static final int EXACT_ALARM_PERMISSION_REQUEST_CODE = 2;
@@ -1561,9 +1562,26 @@ public class FlutterLocalNotificationsPlugin
 
     mainActivity = binding.getActivity();
     Intent mainActivityIntent = mainActivity.getIntent();
+    // Launch details that were already answered, e.g. by the timeout of an engine that started
+    // without an activity, do not cover this intent: deliver it like a new intent instead. Only for
+    // a new activity, as a restored one carries the intent that once started it, not a new tap.
+    boolean launchDetailsAnswered = launchDetailsRequested && pendingLaunchDetailsResults.isEmpty();
     flushPendingLaunchDetailsResults();
     if (!launchedActivityFromHistory(mainActivityIntent)) {
-      if (SELECT_FOREGROUND_NOTIFICATION_ACTION.equals(mainActivityIntent.getAction())) {
+      if (launchDetailsAnswered) {
+        binding.addOnSaveStateListener(
+            new ActivityPluginBinding.OnSaveInstanceStateListener() {
+              @Override
+              public void onSaveInstanceState(@NonNull Bundle bundle) {}
+
+              @Override
+              public void onRestoreInstanceState(@Nullable Bundle bundle) {
+                if (bundle == null) {
+                  sendNotificationPayloadMessage(mainActivityIntent);
+                }
+              }
+            });
+      } else if (SELECT_FOREGROUND_NOTIFICATION_ACTION.equals(mainActivityIntent.getAction())) {
         Map<String, Object> notificationResponse =
             extractNotificationResponseMap(mainActivityIntent);
         processForegroundNotificationAction(mainActivityIntent, notificationResponse);
@@ -1827,6 +1845,7 @@ public class FlutterLocalNotificationsPlugin
   }
 
   private void getNotificationAppLaunchDetails(Result result) {
+    launchDetailsRequested = true;
     if (mainActivity == null) {
       PendingLaunchDetailsResult pendingResult = new PendingLaunchDetailsResult(result);
       pendingResult.timeoutRunnable =
