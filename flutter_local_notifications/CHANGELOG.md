@@ -1,3 +1,16 @@
+## [22.3.3]
+
+* [Android] fixed issues [#2858](https://github.com/MaikuB/flutter_local_notifications/issues/2858) where for repeating notifications, the specified wall-clock time was not kept when daylight savings related transitions took place. Thanks to the PR from [Metehan Arıman](https://github.com/imariman)
+
+## [22.3.2]
+
+* [iOS] fixed issue [#2838](https://github.com/MaikuB/flutter_local_notifications/issues/2838) so that plugin longer throws `PlatformException`s that started on iOS 27 when permissions were not granted and when badge only notifications were triggered. This restores the behaviour of the plugin to as it was before. Thanks to the PR from [Vasily Laushkin](https://github.com/vlaushkin)
+* [Linux] bumped allowed `dbus` dependency version constraints to `>=0.7.8 <0.9.0`
+
+## [22.3.1]
+
+* [macOS] fixed subtitle not showing up properly. Thanks to the PR from [Soi (Jiwon Lee)](https://github.com/JIWON1923)
+
 ## [22.3.0]
 
 * [Android][iOS][macOS] added `openAppNotificationSettings()` method. This opens the system settings UI where the user can manage notification permissions for the app. When not possible, on iOS, it opens the application's settings on iOS and on macOS, it opens the system settings notification pane. Thanks to the PR from [hamadcc](https://github.com/hamadcc)
