@@ -10,5 +10,6 @@ public enum NotificationStyle {
   BigText,
   Inbox,
   Messaging,
-  Media
+  Media,
+  Progress
 }
